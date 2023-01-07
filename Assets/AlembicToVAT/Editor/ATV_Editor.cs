@@ -22,7 +22,10 @@ public class ATV_Editor : EditorWindow
 
 	public Transform MeshToBake;
 	public Material ReferenceMaterial;
+	public Material URPReferenceMaterial;
 
+	private bool URP = false;
+	private Material finalMaterial;
     [MenuItem("Window/Alembic to VAT")]
     public static void ShowWindow()
     {
@@ -32,6 +35,7 @@ public class ATV_Editor : EditorWindow
 	public void Awake()
     {
 		ReferenceMaterial = Resources.Load<Material>("VATMaterial");
+		URPReferenceMaterial = Resources.Load<Material>("URP_VATMaterial");
 	}
 
     void OnGUI()
@@ -46,7 +50,10 @@ public class ATV_Editor : EditorWindow
 		}
         GUILayout.Label ("Drop one object UNDER the Alembic player");
  		ReferenceMaterial = EditorGUILayout.ObjectField("Reference material", ReferenceMaterial, typeof(Material), true) as Material;
-        GUILayout.Space(10);
+		URPReferenceMaterial = EditorGUILayout.ObjectField("URP Reference material", URPReferenceMaterial, typeof(Material), true) as Material;
+		URP = EditorGUILayout.Toggle("URP", URP);
+
+		GUILayout.Space(10);
         GUILayout.Label ("Export", EditorStyles.boldLabel);
         ExportPath = EditorGUILayout.TextField ("Export path", ExportPath);
         ExportFilename = EditorGUILayout.TextField ("Export filename", ExportFilename);
@@ -142,6 +149,8 @@ public class ATV_Editor : EditorWindow
 	private void BakeMesh()
 	{
 		Debug.Log("Start baking mesh!");
+		if (URP)
+			finalMaterial = URPReferenceMaterial;
         currentBaking = EditorCoroutineUtility.StartCoroutine(ExportFrames(), this);
 	}
 
@@ -522,7 +531,7 @@ public class ATV_Editor : EditorWindow
 			Debug.Log("Create prefab");
 
 			Debug.Log("Saving material asset");
-			Material newMaterial = new Material(ReferenceMaterial.shader);
+			Material newMaterial = new Material(finalMaterial.shader);
 			newMaterial.name = ExportFilename+"_material";
 			newMaterial.SetFloat("_Framecount", (float)framesCount);
 
